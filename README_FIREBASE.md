@@ -1,4 +1,4 @@
-# WhatsApp Events 🎉
+# WhatsApp Events 🔥 - Con Firebase
 
 Una plataforma interactiva donde los invitados pueden mandar mensajes en tiempo real escaneando un QR, y todos los mensajes aparecen en la pantalla del evento como si fuera un grupo de WhatsApp gigante.
 
@@ -10,25 +10,17 @@ Una plataforma interactiva donde los invitados pueden mandar mensajes en tiempo 
 - ✅ **Sin Límites**: Los invitados pueden enviar múltiples mensajes
 - ✅ **Fecha y Hora**: Cada mensaje muestra cuándo fue enviado
 - ✅ **QR Dinámico**: Cada evento tiene su propio QR único
-- ✅ **Sin Backend**: Usa Supabase como base de datos en la nube
-- ✅ **Deploy Fácil**: Se sube directamente a Vercel
-
-## 📱 Cómo Funciona
-
-1. **El administrador crea un evento** y obtiene un QR único
-2. **Se muestra el QR en pantalla** con la frase "Escaneá y mandá tu mensaje"
-3. **Los invitados escanean el QR** y van a una web simple
-4. **Escriben su nombre y mensaje** en el formulario
-5. **El administrador aprueba/rechaza** los mensajes desde su panel
-6. **Los mensajes aprobados aparecen** en tiempo real en la pantalla pública
+- ✅ **Sin Backend**: Usa Firebase como base de datos en la nube
+- ✅ **Deploy Fácil**: Se sube directamente a Firebase Hosting
+- ✅ **Completamente Gratis**: Usa solo el plan gratuito de Firebase
 
 ## 🛠️ Tecnologías
 
 - **Frontend**: Next.js 15 + TypeScript + Tailwind CSS
-- **Base de Datos**: Supabase (PostgreSQL en la nube)
-- **Tiempo Real**: Supabase Realtime
-- **QR**: Librería qrcode.js
-- **Hosting**: Vercel
+- **Base de Datos**: Firebase Firestore (NoSQL)
+- **Tiempo Real**: Firebase Firestore Realtime
+- **QR**: Librería qrcode.js (generado en memoria)
+- **Hosting**: Firebase Hosting
 - **Iconos**: Lucide React
 
 ## 📋 Instalación
@@ -44,18 +36,54 @@ cd whatsapp-events
 npm install
 ```
 
-3. **Configura Supabase** (ver `SUPABASE_SETUP.md`)
+3. **Configura Firebase** (ver `FIREBASE_SETUP.md`)
 
 4. **Crea el archivo `.env.local`**
 ```env
-NEXT_PUBLIC_SUPABASE_URL=tu_url_de_supabase
-NEXT_PUBLIC_SUPABASE_ANON_KEY=tu_clave_anonima
+NEXT_PUBLIC_FIREBASE_API_KEY=tu_api_key
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=tu-proyecto.firebaseapp.com
+NEXT_PUBLIC_FIREBASE_PROJECT_ID=tu-proyecto
+NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=tu-proyecto.appspot.com
+NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=123456789
+NEXT_PUBLIC_FIREBASE_APP_ID=tu_app_id
 ```
 
 5. **Ejecuta el proyecto**
 ```bash
 npm run dev
 ```
+
+## 🔥 Configuración de Firebase
+
+### 1. Crear Proyecto en Firebase
+- Ve a [firebase.google.com](https://firebase.google.com)
+- Crea un nuevo proyecto
+- Habilita Firestore Database
+- Habilita Firebase Hosting
+
+### 2. Configurar Firestore
+- Ve a Firestore Database
+- Crea las colecciones:
+  - `events` (eventos)
+  - `messages` (mensajes)
+
+### 3. Reglas de Seguridad
+```javascript
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Permitir lectura y escritura para todos (para simplicidad)
+    match /{document=**} {
+      allow read, write: if true;
+    }
+  }
+}
+```
+
+### 4. Obtener Credenciales
+- Ve a Project Settings > General
+- Copia las credenciales de configuración
+- Péguelas en tu archivo `.env.local`
 
 ## 🎯 Uso
 
@@ -75,14 +103,28 @@ npm run dev
 4. Envía el mensaje
 5. Espera a que sea aprobado por el administrador
 
-## 🚀 Deploy en Vercel
+## 🚀 Deploy en Firebase Hosting
 
-1. **Sube el código a GitHub**
-2. **Conecta con Vercel**
-3. **Agrega las variables de entorno**:
-   - `NEXT_PUBLIC_SUPABASE_URL`
-   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-4. **¡Listo!** Tu aplicación estará online
+1. **Instalar Firebase CLI**
+```bash
+npm install -g firebase-tools
+```
+
+2. **Inicializar Firebase**
+```bash
+firebase init
+# Selecciona: Hosting, Firestore
+```
+
+3. **Build del proyecto**
+```bash
+npm run build
+```
+
+4. **Deploy**
+```bash
+firebase deploy
+```
 
 ## 📊 Estructura del Proyecto
 
@@ -95,7 +137,7 @@ src/
 │   ├── layout.tsx       # Layout principal
 │   └── page.tsx         # Página principal (admin)
 ├── lib/
-│   └── supabase.ts      # Configuración de Supabase
+│   └── firebase.ts      # Configuración de Firebase
 ```
 
 ## 🎨 Personalización
@@ -115,31 +157,40 @@ NEXT_PUBLIC_MAX_MESSAGES_PER_GUEST=10
 ```
 
 ### Personalización de Base de Datos
-- Modifica las tablas en Supabase según tus necesidades
+- Modifica las colecciones en Firestore según tus necesidades
 - Agrega campos adicionales como avatar, emoji, etc.
-- Configura políticas de seguridad personalizadas
+- Configura reglas de seguridad personalizadas
 
 ## 🐛 Solución de Problemas
 
-### Error de Conexión a Supabase
+### Error de Conexión a Firebase
 - Verifica que las variables de entorno estén correctas
-- Asegúrate de que el proyecto de Supabase esté activo
+- Asegúrate de que el proyecto de Firebase esté activo
 
 ### QR No Funciona
 - Verifica que la URL del QR sea correcta
 - Asegúrate de que el evento esté activo
 
 ### Mensajes No Aparecen
-- Verifica que Supabase Realtime esté habilitado
+- Verifica que Firestore Realtime esté habilitado
 - Revisa la consola del navegador para errores
 
 ## 📞 Soporte
 
 Si tienes problemas o preguntas:
-1. Revisa la documentación de Supabase
-2. Verifica la configuración de Vercel
+1. Revisa la documentación de Firebase
+2. Verifica la configuración de Firebase Hosting
 3. Revisa los logs en la consola del navegador
 
 ## 🎉 ¡Disfruta tu Evento!
 
 Esta aplicación está diseñada para hacer que tus eventos sean más interactivos y divertidos. ¡Los invitados van a amar poder participar de esta manera!
+
+## 💰 Costos
+
+**Completamente GRATIS** con el plan gratuito de Firebase:
+- ✅ 1GB de almacenamiento
+- ✅ 20,000 lecturas/día
+- ✅ 20,000 escrituras/día
+- ✅ 10GB de transferencia/mes
+- ✅ Hosting ilimitado

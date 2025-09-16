@@ -1,0 +1,268 @@
+'use client'
+
+import { useState, useEffect } from 'react'
+import { getEventByCode, registerGuest, getGuestByPhone, createMessage, subscribeToMessages, Event, Guest, Message } from '@/lib/firebase'
+import { Send, MessageCircle, User, Phone } from 'lucide-react'
+
+export default function GuestPage() {
+  const [event, setEvent] = useState<Event | null>(null)
+  const [guest, setGuest] = useState<Guest | null>(null)
+  const [messages, setMessages] = useState<Message[]>([])
+  const [newMessage, setNewMessage] = useState('')
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
+  
+  // Estados para registro
+  const [registrationData, setRegistrationData] = useState({
+    name: '',
+    phone: ''
+  })
+  const [isRegistering, setIsRegistering] = useState(false)
+
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search)
+    const eventCode = urlParams.get('event')
+    
+    if (eventCode) {
+      loadEventAndCheckGuest(eventCode)
+    } else {
+      setIsLoading(false)
+    }
+  }, [])
+
+  const loadEventAndCheckGuest = async (code: string) => {
+    try {
+      const eventData = await getEventByCode(code)
+      if (!eventData) {
+        alert('Evento no encontrado')
+        setIsLoading(false)
+        return
+      }
+      
+      setEvent(eventData)
+      
+      // Verificar si hay un invitado registrado en localStorage
+      const savedPhone = localStorage.getItem(`guest_phone_${eventData.id}`)
+      if (savedPhone) {
+        const guestData = await getGuestByPhone(eventData.id, savedPhone)
+        if (guestData) {
+          setGuest(guestData)
+          setIsLoading(false)
+          return
+        }
+      }
+      
+      setIsLoading(false)
+    } catch (error) {
+      console.error('Error loading event:', error)
+      alert('Error al cargar el evento')
+      setIsLoading(false)
+    }
+  }
+
+  const handleRegistration = async () => {
+    if (!registrationData.name.trim() || !registrationData.phone.trim() || !event) return
+
+    setIsRegistering(true)
+    try {
+      const newGuest = await registerGuest(event.id, registrationData.name.trim(), registrationData.phone.trim())
+      setGuest(newGuest)
+      
+      // Guardar en localStorage para futuras visitas
+      localStorage.setItem(`guest_phone_${event.id}`, registrationData.phone.trim())
+      
+      setIsRegistering(false)
+    } catch (error) {
+      console.error('Error registering guest:', error)
+      alert('Error al registrarse. Intenta de nuevo.')
+      setIsRegistering(false)
+    }
+  }
+
+  const sendMessage = async () => {
+    if (!newMessage.trim() || !guest || !event) return
+
+    setIsSubmitting(true)
+    try {
+      await createMessage(event.id, guest.name, newMessage.trim(), guest.phone)
+      setNewMessage('')
+      setIsSubmitting(false)
+    } catch (error) {
+      console.error('Error sending message:', error)
+      alert('Error al enviar el mensaje. Intenta de nuevo.')
+      setIsSubmitting(false)
+    }
+  }
+
+  // Suscribirse a mensajes cuando hay un invitado registrado
+  useEffect(() => {
+    if (!event || !guest) return
+
+    const unsubscribe = subscribeToMessages(event.id, (messages) => {
+      setMessages(messages)
+    })
+
+    return () => unsubscribe()
+  }, [event, guest])
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-green-400 to-blue-500 flex items-center justify-center p-4">
+        <div className="bg-white rounded-lg shadow-xl p-6 text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-500 mx-auto mb-4"></div>
+          <h1 className="text-xl font-bold text-gray-800 mb-2">
+            Cargando evento...
+          </h1>
+        </div>
+      </div>
+    )
+  }
+
+  if (!event) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-green-400 to-blue-500 flex items-center justify-center p-4">
+        <div className="bg-white rounded-lg shadow-xl p-6 text-center">
+          <h1 className="text-xl font-bold text-gray-800 mb-4">
+            Evento no encontrado
+          </h1>
+          <p className="text-gray-600">Verifica que el QR sea correcto</p>
+        </div>
+      </div>
+    )
+  }
+
+  // Si no está registrado, mostrar formulario de registro
+  if (!guest) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-green-400 to-blue-500 p-4">
+        <div className="max-w-md mx-auto">
+          <div className="bg-white rounded-lg shadow-xl p-6 mt-8">
+            <h1 className="text-2xl font-bold text-center mb-6 text-gray-800">
+              📱 Registrarse en el Evento
+            </h1>
+            
+            <div className="mb-6 text-center">
+              <h2 className="text-lg font-semibold text-gray-700">{event.name}</h2>
+              <p className="text-sm text-gray-500">Completa tus datos para participar</p>
+            </div>
+
+            <form onSubmit={(e) => { e.preventDefault(); handleRegistration(); }}>
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <User className="w-4 h-4 inline mr-1" />
+                  Tu nombre:
+                </label>
+                <input
+                  type="text"
+                  value={registrationData.name}
+                  onChange={(e) => setRegistrationData({...registrationData, name: e.target.value})}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                  placeholder="Ej: María"
+                  required
+                />
+              </div>
+
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <Phone className="w-4 h-4 inline mr-1" />
+                  Tu teléfono:
+                </label>
+                <input
+                  type="tel"
+                  value={registrationData.phone}
+                  onChange={(e) => setRegistrationData({...registrationData, phone: e.target.value})}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                  placeholder="Ej: +54 9 11 1234-5678"
+                  required
+                />
+              </div>
+
+              <button
+                type="submit"
+                disabled={isRegistering}
+                className="w-full bg-green-500 hover:bg-green-600 disabled:bg-gray-400 text-white py-3 rounded-lg font-semibold transition-colors"
+              >
+                {isRegistering ? 'Registrando...' : 'Registrarse y Participar'}
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // Si está registrado, mostrar chat tipo WhatsApp
+  const approvedMessages = messages.filter(m => m.status === 'approved')
+
+  return (
+    <div className="min-h-screen bg-gray-100 flex flex-col">
+      {/* Header */}
+      <div className="bg-green-500 text-white p-4">
+        <div className="max-w-md mx-auto">
+          <h1 className="text-lg font-semibold">{event.name}</h1>
+          <p className="text-sm opacity-90">Hola {guest.name} 👋</p>
+        </div>
+      </div>
+
+      {/* Chat Messages */}
+      <div className="flex-1 overflow-y-auto p-4">
+        <div className="max-w-md mx-auto space-y-4">
+          {approvedMessages.length === 0 ? (
+            <div className="text-center text-gray-500 py-8">
+              <MessageCircle className="w-12 h-12 mx-auto mb-4 opacity-50" />
+              <p>Los mensajes aparecerán aquí cuando sean aprobados</p>
+            </div>
+          ) : (
+            approvedMessages.map((message) => (
+              <div key={message.id} className={`flex ${message.guestName === guest.name ? 'justify-end' : 'justify-start'}`}>
+                <div className={`max-w-xs px-4 py-2 rounded-lg ${
+                  message.guestName === guest.name 
+                    ? 'bg-green-500 text-white' 
+                    : 'bg-white text-gray-800'
+                }`}>
+                  {message.guestName !== guest.name && (
+                    <p className="text-xs font-semibold mb-1">{message.guestName}</p>
+                  )}
+                  <p>{message.message}</p>
+                  <p className={`text-xs mt-1 ${
+                    message.guestName === guest.name ? 'text-green-100' : 'text-gray-500'
+                  }`}>
+                    {new Date(message.createdAt).toLocaleTimeString('es-ES', { 
+                      hour: '2-digit', 
+                      minute: '2-digit' 
+                    })}
+                  </p>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      </div>
+
+      {/* Message Input */}
+      <div className="bg-white border-t p-4">
+        <div className="max-w-md mx-auto flex gap-2">
+          <input
+            type="text"
+            value={newMessage}
+            onChange={(e) => setNewMessage(e.target.value)}
+            onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
+            className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+            placeholder="Escribe tu mensaje..."
+            disabled={isSubmitting}
+          />
+          <button
+            onClick={sendMessage}
+            disabled={!newMessage.trim() || isSubmitting}
+            className="bg-green-500 hover:bg-green-600 disabled:bg-gray-400 text-white p-2 rounded-lg transition-colors"
+          >
+            <Send className="w-5 h-5" />
+          </button>
+        </div>
+        <p className="text-xs text-gray-500 text-center mt-2">
+          Los mensajes serán revisados antes de aparecer
+        </p>
+      </div>
+    </div>
+  )
+}
