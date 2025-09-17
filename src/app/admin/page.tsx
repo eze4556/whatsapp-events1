@@ -24,21 +24,26 @@ import {
   Users,
   Clock
 } from 'lucide-react'
+import EventCustomizationModal, { EventCustomizationData } from '../components/EventCustomizationModal'
 
 export default function AdminPage() {
   const [event, setEvent] = useState<Event | null>(null)
   const [messages, setMessages] = useState<Message[]>([])
   const [qrCodeUrl, setQrCodeUrl] = useState<string>('')
   const [isLoading, setIsLoading] = useState(false)
+  const [showCustomizationModal, setShowCustomizationModal] = useState(false)
 
-  // Crear nuevo evento
-  const createNewEvent = async () => {
-    const eventName = prompt('Nombre del evento:')
-    if (!eventName) return
-
+  // Crear nuevo evento con personalización
+  const handleCreateEvent = async (data: EventCustomizationData) => {
     setIsLoading(true)
     try {
-      const newEvent = await createEvent(eventName)
+      const newEvent = await createEvent(
+        data.name,
+        data.displayName,
+        data.backgroundColor,
+        data.textColor,
+        data.backgroundImage
+      )
       setEvent(newEvent)
       
       // Generar QR
@@ -50,6 +55,11 @@ export default function AdminPage() {
     } finally {
       setIsLoading(false)
     }
+  }
+
+  // Abrir modal de personalización
+  const openCustomizationModal = () => {
+    setShowCustomizationModal(true)
   }
 
   // Cargar mensajes
@@ -142,7 +152,7 @@ export default function AdminPage() {
                 Crea un nuevo evento para comenzar a recibir mensajes de los invitados
               </p>
               <button
-                onClick={createNewEvent}
+                onClick={openCustomizationModal}
                 disabled={isLoading}
                 className="w-full bg-green-500 hover:bg-green-600 disabled:bg-gray-400 text-white px-6 py-3 rounded-lg text-lg font-semibold transition-colors flex items-center justify-center"
               >
@@ -154,7 +164,7 @@ export default function AdminPage() {
                 ) : (
                   <>
                     <Play className="w-5 h-5 mr-2" />
-                    Iniciar Pantalla
+                    Crear Evento Personalizado
                   </>
                 )}
               </button>
@@ -215,14 +225,14 @@ export default function AdminPage() {
                       <div key={message.id} className="border rounded-lg p-4 bg-yellow-50 border-yellow-200">
                         <div className="flex justify-between items-start mb-2">
                           <div>
-                            <span className="font-semibold text-gray-800">{message.guestName}</span>
-                            <span className="text-sm text-gray-600 ml-2">({message.guestPhone})</span>
+                            <span className="font-semibold text-gray-900">{message.guestName}</span>
+                            <span className="text-sm text-gray-700 ml-2">({message.guestPhone})</span>
                           </div>
                           <span className="text-xs text-gray-500">
                             {new Date(message.createdAt).toLocaleString('es-ES')}
                           </span>
                         </div>
-                        <p className="text-gray-700 mb-3">{message.message}</p>
+                        <p className="text-gray-900 mb-3 font-medium">{message.message}</p>
                         <div className="flex gap-2">
                           <button
                             onClick={() => approveMessageHandler(message.id)}
@@ -279,7 +289,7 @@ export default function AdminPage() {
                     Abrir Pantalla
                   </button>
                   <button
-                    onClick={createNewEvent}
+                    onClick={openCustomizationModal}
                     className="w-full bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg transition-colors"
                   >
                     Nuevo Evento
@@ -290,6 +300,13 @@ export default function AdminPage() {
           </div>
         )}
       </div>
+
+      {/* Modal de Personalización */}
+      <EventCustomizationModal
+        isOpen={showCustomizationModal}
+        onClose={() => setShowCustomizationModal(false)}
+        onCreateEvent={handleCreateEvent}
+      />
     </div>
   )
 }

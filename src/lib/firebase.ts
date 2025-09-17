@@ -34,6 +34,11 @@ export interface Event {
   qrCode: string
   createdAt: Date
   isActive: boolean
+  // Campos de personalización
+  displayName: string
+  backgroundColor: string
+  textColor: string
+  backgroundImage?: string // base64
 }
 
 export interface Guest {
@@ -45,15 +50,35 @@ export interface Guest {
 }
 
 // Funciones para eventos
-export const createEvent = async (name: string) => {
+export const createEvent = async (
+  name: string, 
+  displayName: string, 
+  backgroundColor: string = '#1f2937', 
+  textColor: string = '#ffffff',
+  backgroundImage?: string
+) => {
   const qrCode = `event_${Date.now()}`
   const docRef = await addDoc(collection(db, 'events'), {
     name,
     qrCode,
+    displayName,
+    backgroundColor,
+    textColor,
+    backgroundImage: backgroundImage || null,
     createdAt: new Date(),
     isActive: true
   })
-  return { id: docRef.id, name, qrCode, createdAt: new Date(), isActive: true }
+  return { 
+    id: docRef.id, 
+    name, 
+    qrCode, 
+    displayName,
+    backgroundColor,
+    textColor,
+    backgroundImage,
+    createdAt: new Date(), 
+    isActive: true 
+  }
 }
 
 export const getEventByCode = async (qrCode: string) => {
