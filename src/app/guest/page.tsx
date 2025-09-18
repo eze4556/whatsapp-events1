@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { getEventByCode, registerGuest, getGuestByPhone, createMessage, subscribeToMessages, Event, Guest, Message } from '@/lib/firebase'
-import { Send, MessageCircle, User, Phone } from 'lucide-react'
+import { Send, MessageCircle, User, Phone, Monitor } from 'lucide-react'
 
 export default function GuestPage() {
   const [event, setEvent] = useState<Event | null>(null)
@@ -18,6 +18,7 @@ export default function GuestPage() {
     phone: ''
   })
   const [isRegistering, setIsRegistering] = useState(false)
+  const [showPublicView, setShowPublicView] = useState(false)
 
   // Función helper para convertir fechas de Firebase
   const formatDate = (date: any) => {
@@ -228,42 +229,150 @@ export default function GuestPage() {
     <div className="min-h-screen bg-gray-100 flex flex-col">
       {/* Header */}
       <div className="bg-green-500 text-white p-4">
-        <div className="max-w-md mx-auto">
-          <h1 className="text-lg font-semibold">{event.name}</h1>
-          <p className="text-sm opacity-90">Hola {guest.name} 👋</p>
+        <div className="max-w-md mx-auto flex justify-between items-center">
+          <div>
+            <h1 className="text-lg font-semibold">{event.name}</h1>
+            <p className="text-sm opacity-90">Hola {guest.name} 👋</p>
+          </div>
+          <button
+            onClick={() => setShowPublicView(!showPublicView)}
+            className={`p-2 rounded-lg transition-colors ${
+              showPublicView 
+                ? 'bg-white bg-opacity-30 hover:bg-opacity-40' 
+                : 'bg-white bg-opacity-20 hover:bg-opacity-30'
+            }`}
+            title={showPublicView ? "Ocultar pantalla pública" : "Ver pantalla pública"}
+          >
+            <Monitor className="w-5 h-5 text-green-600" />
+          </button>
         </div>
       </div>
 
-      {/* Chat Messages */}
-      <div className="flex-1 overflow-y-auto p-4">
-        <div className="max-w-md mx-auto space-y-4">
-          {approvedMessages.length === 0 ? (
-            <div className="text-center text-gray-500 py-8">
-              <MessageCircle className="w-12 h-12 mx-auto mb-4 opacity-50" />
-              <p>Los mensajes aparecerán aquí cuando sean aprobados</p>
-            </div>
-          ) : (
-            approvedMessages.map((message) => (
-              <div key={message.id} className={`flex ${message.guestName === guest.name ? 'justify-end' : 'justify-start'}`}>
-                <div className={`max-w-xs px-4 py-2 rounded-lg ${
-                  message.guestName === guest.name 
-                    ? 'bg-green-500 text-white' 
-                    : 'bg-white text-gray-800'
-                }`}>
-                  {message.guestName !== guest.name && (
-                    <p className="text-xs font-semibold mb-1">{message.guestName}</p>
-                  )}
-                  <p>{message.message}</p>
-                  <p className={`text-xs mt-1 ${
-                    message.guestName === guest.name ? 'text-green-100' : 'text-gray-500'
+      {/* Contenido Principal */}
+      <div className="flex-1 flex">
+        {/* Chat Messages */}
+        <div className={`${showPublicView ? 'w-1/2' : 'w-full'} overflow-y-auto p-4`}>
+          <div className="max-w-md mx-auto space-y-4">
+            {approvedMessages.length === 0 ? (
+              <div className="text-center text-gray-500 py-8">
+                <MessageCircle className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                <p>Los mensajes aparecerán aquí cuando sean aprobados</p>
+              </div>
+            ) : (
+              approvedMessages.map((message) => (
+                <div key={message.id} className={`flex ${message.guestName === guest.name ? 'justify-end' : 'justify-start'}`}>
+                  <div className={`max-w-xs px-4 py-2 rounded-lg ${
+                    message.guestName === guest.name 
+                      ? 'bg-green-500 text-white' 
+                      : 'bg-white text-gray-800'
                   }`}>
-                    {formatDate(message.createdAt)}
-                  </p>
+                    {message.guestName !== guest.name && (
+                      <p className="text-xs font-semibold mb-1">{message.guestName}</p>
+                    )}
+                    <p>{message.message}</p>
+                    <p className={`text-xs mt-1 ${
+                      message.guestName === guest.name ? 'text-green-100' : 'text-gray-500'
+                    }`}>
+                      {formatDate(message.createdAt)}
+                    </p>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+
+        {/* Vista Pública */}
+        {showPublicView && (
+          <div className="w-1/2 border-l border-gray-300">
+            <div 
+              className="h-full"
+              style={{ 
+                backgroundColor: event.backgroundColor,
+                color: event.textColor,
+                backgroundImage: event.backgroundImage ? `url(${event.backgroundImage})` : undefined,
+                backgroundSize: 'cover',
+                backgroundRepeat: 'no-repeat',
+                backgroundPosition: 'center center'
+              }}
+            >
+              {/* Header de la pantalla pública */}
+              <div 
+                className="border-b p-4"
+                style={{ 
+                  backgroundColor: event.backgroundImage ? 'rgba(0,0,0,0.7)' : undefined,
+                  backdropFilter: event.backgroundImage ? 'blur(10px)' : undefined
+                }}
+              >
+                <div className="text-center">
+                  <h2 className="text-2xl font-bold mb-1">
+                    {event.displayName}
+                  </h2>
+                  <div className="flex items-center justify-center opacity-90 text-sm">
+                    <Monitor className="w-4 h-4 mr-1" />
+                    <span>Pantalla Pública</span>
+                  </div>
                 </div>
               </div>
-            ))
-          )}
-        </div>
+
+              {/* Mensajes de la pantalla pública */}
+              <div className="p-4 h-full overflow-y-auto">
+                <div className="space-y-3">
+                  {approvedMessages.length === 0 ? (
+                    <div className="text-center py-8 opacity-90">
+                      <MessageCircle className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                      <h3 className="text-lg font-semibold mb-2">¡Esperando mensajes!</h3>
+                      <p className="text-sm">Los mensajes aparecerán aquí cuando sean aprobados</p>
+                    </div>
+                  ) : (
+                    approvedMessages.map((message, index) => (
+                      <div 
+                        key={message.id} 
+                        className={`flex items-end space-x-2 ${
+                          index % 2 === 0 ? 'animate-slideInLeft' : 'animate-slideInRight'
+                        }`}
+                        style={{ animationDelay: `${index * 0.1}s` }}
+                      >
+                        {/* Avatar */}
+                        <div 
+                          className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold flex-shrink-0"
+                          style={{ 
+                            background: 'linear-gradient(135deg, #25d366, #128c7e)',
+                            color: 'white',
+                            boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+                          }}
+                        >
+                          {message.guestName.charAt(0).toUpperCase()}
+                        </div>
+                        
+                        {/* Mensaje */}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center space-x-1 mb-1">
+                            <span className="font-semibold text-xs opacity-90">{message.guestName}</span>
+                            <span className="text-xs opacity-60">
+                              {formatDate(message.createdAt)}
+                            </span>
+                          </div>
+                          
+                          {/* Burbuja de mensaje */}
+                          <div 
+                            className="rounded-lg px-3 py-2 text-sm break-words relative"
+                            style={{ 
+                              backgroundColor: event.textColor === '#ffffff' ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
+                              backdropFilter: 'blur(5px)'
+                            }}
+                          >
+                            {message.message}
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Message Input */}
