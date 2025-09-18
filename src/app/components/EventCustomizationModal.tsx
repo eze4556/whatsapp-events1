@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useRef } from 'react'
-import { X, Palette, Image, Type } from 'lucide-react'
+import { X, Palette, Image as ImageIcon, Type } from 'lucide-react'
 import Image from 'next/image'
 
 interface EventCustomizationModalProps {
@@ -232,7 +232,7 @@ export default function EventCustomizationModal({ isOpen, onClose, onCreateEvent
           {/* Imagen de fondo */}
           <div className="space-y-4">
             <h3 className="text-lg font-semibold text-gray-800 flex items-center">
-              <Image className="w-5 h-5 mr-2" />
+              <ImageIcon className="w-5 h-5 mr-2" />
               Imagen de Fondo (Opcional)
             </h3>
 
@@ -274,7 +274,7 @@ export default function EventCustomizationModal({ isOpen, onClose, onCreateEvent
                     onClick={() => fileInputRef.current?.click()}
                     className="w-full border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-gray-400 transition-colors"
                   >
-                    <Image className="w-8 h-8 mx-auto mb-2 text-gray-400" />
+                    <ImageIcon className="w-8 h-8 mx-auto mb-2 text-gray-400" />
                     <p className="text-gray-600">Haz clic para subir una imagen</p>
                     <p className="text-sm text-gray-500 mt-1">Máximo 2MB</p>
                   </button>
