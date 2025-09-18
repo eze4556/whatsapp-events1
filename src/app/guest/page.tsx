@@ -19,6 +19,36 @@ export default function GuestPage() {
   })
   const [isRegistering, setIsRegistering] = useState(false)
 
+  // Función helper para convertir fechas de Firebase
+  const formatDate = (date: any) => {
+    if (!date) return '--:--'
+    
+    let dateObj: Date
+    
+    // Si es un Timestamp de Firebase
+    if (date && typeof date === 'object' && date.seconds) {
+      dateObj = new Date(date.seconds * 1000)
+    }
+    // Si es un objeto Date
+    else if (date instanceof Date) {
+      dateObj = date
+    }
+    // Si es un string o número
+    else {
+      dateObj = new Date(date)
+    }
+    
+    // Verificar si la fecha es válida
+    if (isNaN(dateObj.getTime())) {
+      return '--:--'
+    }
+    
+    return dateObj.toLocaleTimeString('es-ES', { 
+      hour: '2-digit', 
+      minute: '2-digit' 
+    })
+  }
+
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search)
     const eventCode = urlParams.get('event')
@@ -156,7 +186,7 @@ export default function GuestPage() {
                   type="text"
                   value={registrationData.name}
                   onChange={(e) => setRegistrationData({...registrationData, name: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-900"
                   placeholder="Ej: María"
                   required
                 />
@@ -171,7 +201,7 @@ export default function GuestPage() {
                   type="tel"
                   value={registrationData.phone}
                   onChange={(e) => setRegistrationData({...registrationData, phone: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-900"
                   placeholder="Ej: +54 9 11 1234-5678"
                   required
                 />
@@ -227,10 +257,7 @@ export default function GuestPage() {
                   <p className={`text-xs mt-1 ${
                     message.guestName === guest.name ? 'text-green-100' : 'text-gray-500'
                   }`}>
-                    {new Date(message.createdAt).toLocaleTimeString('es-ES', { 
-                      hour: '2-digit', 
-                      minute: '2-digit' 
-                    })}
+                    {formatDate(message.createdAt)}
                   </p>
                 </div>
               </div>
@@ -247,7 +274,7 @@ export default function GuestPage() {
             value={newMessage}
             onChange={(e) => setNewMessage(e.target.value)}
             onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
-            className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+            className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-900"
             placeholder="Escribe tu mensaje..."
             disabled={isSubmitting}
           />

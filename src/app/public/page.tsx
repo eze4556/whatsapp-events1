@@ -2,12 +2,44 @@
 
 import { useState, useEffect } from 'react'
 import { getEventByCode, getMessages, subscribeToMessages, Event, Message } from '@/lib/firebase'
-import { MessageCircle, QrCode } from 'lucide-react'
+import { MessageCircle, QrCode, Sparkles } from 'lucide-react'
 
 export default function PublicPage() {
   const [event, setEvent] = useState<Event | null>(null)
   const [messages, setMessages] = useState<Message[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [newMessageCount, setNewMessageCount] = useState(0)
+  const [showNewMessageEffect, setShowNewMessageEffect] = useState(false)
+
+  // Función helper para convertir fechas de Firebase
+  const formatDate = (date: any) => {
+    if (!date) return '--:--'
+    
+    let dateObj: Date
+    
+    // Si es un Timestamp de Firebase
+    if (date && typeof date === 'object' && date.seconds) {
+      dateObj = new Date(date.seconds * 1000)
+    }
+    // Si es un objeto Date
+    else if (date instanceof Date) {
+      dateObj = date
+    }
+    // Si es un string o número
+    else {
+      dateObj = new Date(date)
+    }
+    
+    // Verificar si la fecha es válida
+    if (isNaN(dateObj.getTime())) {
+      return '--:--'
+    }
+    
+    return dateObj.toLocaleTimeString('es-ES', { 
+      hour: '2-digit', 
+      minute: '2-digit' 
+    })
+  }
 
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search)
@@ -40,12 +72,25 @@ export default function PublicPage() {
   useEffect(() => {
     if (!event) return
 
-    const unsubscribe = subscribeToMessages(event.id, (messages) => {
-      setMessages(messages)
+    const unsubscribe = subscribeToMessages(event.id, (newMessages) => {
+      const approvedMessages = newMessages.filter(m => m.status === 'approved')
+      
+      // Detectar mensajes nuevos
+      if (messages.length > 0 && approvedMessages.length > messages.filter(m => m.status === 'approved').length) {
+        setNewMessageCount(prev => prev + 1)
+        setShowNewMessageEffect(true)
+        
+        // Ocultar efecto después de 3 segundos
+        setTimeout(() => {
+          setShowNewMessageEffect(false)
+        }, 3000)
+      }
+      
+      setMessages(newMessages)
     })
 
     return () => unsubscribe()
-  }, [event])
+  }, [event, messages])
 
   if (isLoading) {
     return (
@@ -86,12 +131,22 @@ export default function PublicPage() {
     >
       {/* Header */}
       <div 
-        className="border-b p-6"
+        className="border-b p-6 relative"
         style={{ 
           backgroundColor: event.backgroundImage ? 'rgba(0,0,0,0.7)' : undefined,
           backdropFilter: event.backgroundImage ? 'blur(10px)' : undefined
         }}
       >
+        {/* Efecto de mensaje nuevo */}
+        {showNewMessageEffect && (
+          <div className="absolute top-4 right-4 animate-bounceIn">
+            <div className="bg-green-500 text-white px-4 py-2 rounded-full flex items-center space-x-2 shadow-lg">
+              <Sparkles className="w-4 h-4" />
+              <span className="text-sm font-semibold">¡Nuevo mensaje!</span>
+            </div>
+          </div>
+        )}
+        
         <div className="max-w-4xl mx-auto text-center">
           <h1 className="text-4xl font-bold mb-2">
             {event.displayName}
@@ -120,32 +175,36 @@ export default function PublicPage() {
                 <p>Los mensajes aparecerán aquí cuando sean aprobados por el administrador</p>
               </div>
             ) : (
-              approvedMessages.map((message) => (
-                <div key={message.id} className="flex items-start space-x-3 animate-fadeIn">
-                  <div 
-                    className="w-10 h-10 rounded-full flex items-center justify-center font-semibold text-sm flex-shrink-0"
-                    style={{ 
-                      backgroundColor: event.textColor === '#ffffff' ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.2)',
-                      color: event.textColor
-                    }}
-                  >
+              approvedMessages.map((message, index) => (
+                <div 
+                  key={message.id} 
+                  className={`flex items-end space-x-3 mb-4 ${
+                    index % 2 === 0 ? 'animate-slideInLeft' : 'animate-slideInRight'
+                  }`}
+                  style={{ animationDelay: `${index * 0.1}s` }}
+                >
+                  {/* Avatar */}
+                  <div className="whatsapp-avatar flex-shrink-0">
                     {message.guestName.charAt(0).toUpperCase()}
                   </div>
+                  
+                  {/* Mensaje */}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center space-x-2 mb-1">
-                      <span className="font-semibold">{message.guestName}</span>
-                      <span className="text-xs opacity-70">
-                        {new Date(message.createdAt).toLocaleString('es-ES')}
+                      <span className="font-semibold text-sm opacity-90">{message.guestName}</span>
+                      <span className="text-xs opacity-60">
+                        {formatDate(message.createdAt)}
                       </span>
                     </div>
-                    <div 
-                      className="rounded-lg px-4 py-3 break-words"
-                      style={{ 
-                        backgroundColor: event.textColor === '#ffffff' ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
-                        backdropFilter: 'blur(5px)'
-                      }}
-                    >
-                      {message.message}
+                    
+                    {/* Burbuja de mensaje */}
+                    <div className="whatsapp-bubble-other relative">
+                      <div className="text-gray-800 break-words">
+                        {message.message}
+                      </div>
+                      <div className="message-time-left text-gray-500">
+                        {formatDate(message.createdAt)}
+                      </div>
                     </div>
                   </div>
                 </div>

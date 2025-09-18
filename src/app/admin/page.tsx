@@ -33,6 +33,33 @@ export default function AdminPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [showCustomizationModal, setShowCustomizationModal] = useState(false)
 
+  // Función helper para convertir fechas de Firebase
+  const formatDate = (date: any) => {
+    if (!date) return '--:--'
+    
+    let dateObj: Date
+    
+    // Si es un Timestamp de Firebase
+    if (date && typeof date === 'object' && date.seconds) {
+      dateObj = new Date(date.seconds * 1000)
+    }
+    // Si es un objeto Date
+    else if (date instanceof Date) {
+      dateObj = date
+    }
+    // Si es un string o número
+    else {
+      dateObj = new Date(date)
+    }
+    
+    // Verificar si la fecha es válida
+    if (isNaN(dateObj.getTime())) {
+      return '--:--'
+    }
+    
+    return dateObj.toLocaleString('es-ES')
+  }
+
   // Crear nuevo evento con personalización
   const handleCreateEvent = async (data: EventCustomizationData) => {
     setIsLoading(true)
@@ -229,7 +256,7 @@ export default function AdminPage() {
                             <span className="text-sm text-gray-700 ml-2">({message.guestPhone})</span>
                           </div>
                           <span className="text-xs text-gray-500">
-                            {new Date(message.createdAt).toLocaleString('es-ES')}
+                            {formatDate(message.createdAt)}
                           </span>
                         </div>
                         <p className="text-gray-900 mb-3 font-medium">{message.message}</p>
