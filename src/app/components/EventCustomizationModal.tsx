@@ -290,7 +290,8 @@ export default function EventCustomizationModal({ isOpen, onClose, onCreateEvent
                 color: formData.textColor,
                 backgroundImage: formData.backgroundImage ? `url(${formData.backgroundImage})` : undefined,
                 backgroundSize: 'cover',
-                backgroundPosition: 'center'
+                backgroundRepeat: 'no-repeat',
+                backgroundPosition: 'center center'
               }}
             >
               <h2 className="text-2xl font-bold text-center mb-2" style={{ color: formData.textColor }}>

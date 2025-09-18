@@ -79,7 +79,8 @@ export default function PublicPage() {
         color: event.textColor,
         backgroundImage: event.backgroundImage ? `url(${event.backgroundImage})` : undefined,
         backgroundSize: 'cover',
-        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat',
+        backgroundPosition: 'center center',
         backgroundAttachment: 'fixed'
       }}
     >
