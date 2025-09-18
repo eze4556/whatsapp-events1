@@ -1,24 +1,24 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { getEventByCode, getMessages, subscribeToMessages, Event, Message } from '@/lib/firebase'
+import { getEventByCode, subscribeToMessages, Event, Message } from '@/lib/firebase'
 import { MessageCircle, QrCode, Sparkles } from 'lucide-react'
 
 export default function PublicPage() {
   const [event, setEvent] = useState<Event | null>(null)
   const [messages, setMessages] = useState<Message[]>([])
   const [isLoading, setIsLoading] = useState(true)
-  const [newMessageCount, setNewMessageCount] = useState(0)
+  const [, setNewMessageCount] = useState(0)
   const [showNewMessageEffect, setShowNewMessageEffect] = useState(false)
 
   // Función helper para convertir fechas de Firebase
-  const formatDate = (date: any) => {
+  const formatDate = (date: Date | { seconds: number } | string | number | null | undefined) => {
     if (!date) return '--:--'
     
     let dateObj: Date
     
     // Si es un Timestamp de Firebase
-    if (date && typeof date === 'object' && date.seconds) {
+    if (date && typeof date === 'object' && 'seconds' in date && typeof date.seconds === 'number') {
       dateObj = new Date(date.seconds * 1000)
     }
     // Si es un objeto Date
