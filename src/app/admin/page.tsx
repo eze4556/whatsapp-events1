@@ -40,14 +40,12 @@ export default function AdminPage() {
     // Si es un Timestamp de Firebase
     if (date && typeof date === 'object' && 'seconds' in date && typeof date.seconds === 'number') {
       dateObj = new Date(date.seconds * 1000)
-    }
-    // Si es un objeto Date
-    else if (date instanceof Date) {
+    } else if (date instanceof Date) {
       dateObj = date
-    }
-    // Si es un string o número
-    else {
+    } else if (typeof date === 'string' || typeof date === 'number') {
       dateObj = new Date(date)
+    } else {
+      return '--:--'
     }
     
     // Verificar si la fecha es válida
