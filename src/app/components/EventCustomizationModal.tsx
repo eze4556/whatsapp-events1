@@ -2,6 +2,7 @@
 
 import { useState, useRef } from 'react'
 import { X, Palette, Image, Type } from 'lucide-react'
+import Image from 'next/image'
 
 interface EventCustomizationModalProps {
   isOpen: boolean
@@ -247,9 +248,11 @@ export default function EventCustomizationModal({ isOpen, onClose, onCreateEvent
               {formData.backgroundImage ? (
                 <div className="space-y-3">
                   <div className="relative">
-                    <img
+                    <Image
                       src={formData.backgroundImage}
                       alt="Preview"
+                      width={400}
+                      height={192}
                       className="w-full h-48 object-cover rounded-lg border"
                     />
                     <button

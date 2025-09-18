@@ -22,6 +22,7 @@ import {
   Users
 } from 'lucide-react'
 import EventCustomizationModal, { EventCustomizationData } from '../components/EventCustomizationModal'
+import Image from 'next/image'
 
 export default function AdminPage() {
   const [event, setEvent] = useState<Event | null>(null)
@@ -134,7 +135,7 @@ export default function AdminPage() {
     if (event) {
       loadMessages()
     }
-  }, [event])
+  }, [event, loadMessages])
 
   const pendingMessages = messages.filter(m => m.status === 'pending')
   const approvedMessages = messages.filter(m => m.status === 'approved')
@@ -207,7 +208,7 @@ export default function AdminPage() {
                 </h2>
                 {qrCodeUrl && (
                   <div className="text-center">
-                    <img src={qrCodeUrl} alt="QR Code" className="mx-auto mb-4" />
+                    <Image src={qrCodeUrl} alt="QR Code" width={200} height={200} className="mx-auto mb-4" />
                     <p className="text-sm text-gray-600 mb-4">
                       Los invitados escanean este QR para enviar mensajes
                     </p>
