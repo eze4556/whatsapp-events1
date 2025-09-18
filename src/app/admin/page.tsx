@@ -3,8 +3,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { 
   createEvent, 
-  getEventByCode, 
-  createMessage, 
   getMessages, 
   approveMessage, 
   rejectMessage, 
@@ -21,8 +19,7 @@ import {
   Monitor,
   Play,
   Eye,
-  Users,
-  Clock
+  Users
 } from 'lucide-react'
 import EventCustomizationModal, { EventCustomizationData } from '../components/EventCustomizationModal'
 
@@ -34,13 +31,13 @@ export default function AdminPage() {
   const [showCustomizationModal, setShowCustomizationModal] = useState(false)
 
   // Función helper para convertir fechas de Firebase
-  const formatDate = (date: any) => {
+  const formatDate = (date: Date | { seconds: number } | string | number | null | undefined) => {
     if (!date) return '--:--'
     
     let dateObj: Date
     
     // Si es un Timestamp de Firebase
-    if (date && typeof date === 'object' && date.seconds) {
+    if (date && typeof date === 'object' && 'seconds' in date && typeof date.seconds === 'number') {
       dateObj = new Date(date.seconds * 1000)
     }
     // Si es un objeto Date
