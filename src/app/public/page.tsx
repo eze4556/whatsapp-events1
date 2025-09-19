@@ -1,7 +1,8 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { getEventByCode, subscribeToMessages, Event, Message } from '@/lib/firebase'
+import { getEventByCode, Event } from '@/lib/firebase'
+import { subscribeToMessages, Message } from '@/lib/pusher-messages'
 import { MessageCircle, QrCode, Sparkles } from 'lucide-react'
 
 export default function PublicPage() {
@@ -72,23 +73,19 @@ export default function PublicPage() {
 
     const unsubscribe = subscribeToMessages(event.id, (newMessages) => {
       const approvedMessages = newMessages.filter(m => m.status === 'approved')
-      
       // Detectar mensajes nuevos
       if (messages.length > 0 && approvedMessages.length > messages.filter(m => m.status === 'approved').length) {
         setNewMessageCount(prev => prev + 1)
         setShowNewMessageEffect(true)
-        
-        // Ocultar efecto después de 3 segundos
         setTimeout(() => {
           setShowNewMessageEffect(false)
         }, 3000)
       }
-      
       setMessages(newMessages)
     })
 
     return () => unsubscribe()
-  }, [event, messages])
+  }, [event])
 
   if (isLoading) {
     return (

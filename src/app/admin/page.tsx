@@ -3,13 +3,9 @@
 import { useState, useEffect, useCallback } from 'react'
 import { 
   createEvent, 
-  getMessages, 
-  approveMessage, 
-  rejectMessage, 
-  subscribeToMessages,
-  Message, 
   Event 
 } from '@/lib/firebase'
+import { subscribeToMessages, approveMessage, rejectMessage, Message } from '@/lib/pusher-messages'
 import QRCode from 'qrcode'
 import { 
   MessageCircle, 
@@ -85,23 +81,12 @@ export default function AdminPage() {
     setShowCustomizationModal(true)
   }
 
-  // Cargar mensajes
-  const loadMessages = useCallback(async () => {
-    if (!event) return
-
-    try {
-      const messagesData = await getMessages(event.id)
-      setMessages(messagesData)
-    } catch (error) {
-      console.error('Error loading messages:', error)
-    }
-  }, [event])
+  // Los mensajes se cargan automáticamente con la suscripción de Pusher
 
   // Aprobar mensaje
   const approveMessageHandler = async (messageId: string) => {
     try {
-      await approveMessage(messageId)
-      loadMessages()
+      approveMessage(messageId, event!.id)
     } catch (error) {
       console.error('Error approving message:', error)
     }
@@ -110,8 +95,7 @@ export default function AdminPage() {
   // Rechazar mensaje
   const rejectMessageHandler = async (messageId: string) => {
     try {
-      await rejectMessage(messageId)
-      loadMessages()
+      rejectMessage(messageId, event!.id)
     } catch (error) {
       console.error('Error rejecting message:', error)
     }
@@ -128,12 +112,7 @@ export default function AdminPage() {
     return () => unsubscribe()
   }, [event])
 
-  // Cargar mensajes cuando cambie el evento
-  useEffect(() => {
-    if (event) {
-      loadMessages()
-    }
-  }, [event, loadMessages])
+  // Los mensajes se cargan automáticamente con la suscripción de Pusher
 
   const pendingMessages = messages.filter(m => m.status === 'pending')
   const approvedMessages = messages.filter(m => m.status === 'approved')

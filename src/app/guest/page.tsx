@@ -1,7 +1,8 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { getEventByCode, registerGuest, getGuestByPhone, createMessage, subscribeToMessages, Event, Guest, Message } from '@/lib/firebase'
+import { getEventByCode, registerGuest, getGuestByPhone, Event, Guest } from '@/lib/firebase'
+import { sendMessage, subscribeToMessages, Message } from '@/lib/pusher-messages'
 import { Send, MessageCircle, User, Phone, Monitor } from 'lucide-react'
 
 export default function GuestPage() {
@@ -108,12 +109,12 @@ export default function GuestPage() {
     }
   }
 
-  const sendMessage = async () => {
+  const sendMessageHandler = async () => {
     if (!newMessage.trim() || !guest || !event) return
 
     setIsSubmitting(true)
     try {
-      await createMessage(event.id, guest.name, newMessage.trim(), guest.phone)
+      sendMessage(event.id, guest.name, newMessage.trim(), guest.phone)
       setNewMessage('')
       setIsSubmitting(false)
     } catch (error) {
@@ -380,13 +381,13 @@ export default function GuestPage() {
             type="text"
             value={newMessage}
             onChange={(e) => setNewMessage(e.target.value)}
-            onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
+            onKeyPress={(e) => e.key === 'Enter' && sendMessageHandler()}
             className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-900"
             placeholder="Escribe tu mensaje..."
             disabled={isSubmitting}
           />
           <button
-            onClick={sendMessage}
+            onClick={sendMessageHandler}
             disabled={!newMessage.trim() || isSubmitting}
             className="bg-green-500 hover:bg-green-600 disabled:bg-gray-400 text-white p-2 rounded-lg transition-colors"
           >
