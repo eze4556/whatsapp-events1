@@ -19,6 +19,7 @@ import {
 } from 'lucide-react'
 import EventCustomizationModal, { EventCustomizationData } from '../components/EventCustomizationModal'
 import Image from 'next/image'
+import jsPDF from 'jspdf'
 
 export default function AdminPage() {
   const [event, setEvent] = useState<Event | null>(null)
@@ -116,6 +117,15 @@ export default function AdminPage() {
 
   const pendingMessages = messages.filter(m => m.status === 'pending')
   const approvedMessages = messages.filter(m => m.status === 'approved')
+
+  const downloadApprovedPDF = () => {
+    const doc = new jsPDF()
+    doc.text('Invitados con mensajes aprobados', 10, 10)
+    approvedMessages.forEach((msg, i) => {
+      doc.text(`${i + 1}. ${msg.guestName} - ${msg.guestPhone}`, 10, 20 + i * 10)
+    })
+    doc.save('invitados_aprobados.pdf')
+  }
 
   return (
     <div className="min-h-screen bg-gray-100">
@@ -277,6 +287,12 @@ export default function AdminPage() {
                     <span className="font-semibold text-green-600">{approvedMessages.length}</span>
                   </div>
                 </div>
+                <button
+                  onClick={downloadApprovedPDF}
+                  className="w-full bg-gray-700 hover:bg-gray-900 text-white px-4 py-2 rounded-lg transition-colors mt-4"
+                >
+                  Descargar PDF de invitados aprobados
+                </button>
               </div>
 
               {/* Acciones Rápidas */}
